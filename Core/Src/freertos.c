@@ -324,7 +324,7 @@ void TLHandler(void *argument)
             xEndTimer = xTaskGetTickCount();
             elapsedTime = xEndTimer - xStartTimer;
             if(receivedBits & Event_EW_Safe_Walk) {
-              NextState = NSG_EWR;
+              NextState = NSR_EWG;
               break;
             }
             if(receivedBits & Event_PL1 || receivedBits & Event_PL1_Pressed_Yellow) {
