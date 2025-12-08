@@ -230,8 +230,8 @@ void TLHandler(void *argument)
   {
     State = NSG_EWR;
     NextState = NSG_EWR;
-    uint32_t instruction, elapsedTime, elapsedTime2;
-    bool toGreen = false, firstRound  = true; // decide whether to go from yellow to red or yellow to green 
+    uint32_t instruction, elapsedTime;
+    bool toGreen = false, firstRound  = true, walkingBarStarted = false; // decide whether to go from yellow to red or yellow to green
     EventBits_t receivedBits;
     TickType_t xStartTimer, xEndTimer, timeToDelay;
     instruction = PL1_Green | PL2_Red;
@@ -243,28 +243,29 @@ void TLHandler(void *argument)
             instruction = TL_NS_Green | TL_EW_Red;
             current_instruction = update_instruction(current_instruction, instruction, TL);
             startBar(G1, greenDelay);
-            if (firstRound) {
+            if (!walkingBarStarted) {
               startBar(W1, walkingDelay);
             }
             stopBar(R1);
-            // check if the PL2 is pressed, or there is a car by TL1 or TL3
             xStartTimer = xTaskGetTickCount();
             receivedBits = xEventGroupWaitBits(eventGroup, Event_PL2 | Event_TL1_Switch | Event_TL3_Switch | Event_TL2_Switch | Event_TL4_Switch | Event_PL2_Pressed_Yellow, pdTRUE, pdFALSE, greenDelay);
             xEndTimer = xTaskGetTickCount();
             elapsedTime = xEndTimer - xStartTimer;
-            if(receivedBits & Event_PL2 || receivedBits & Event_PL2_Pressed_Yellow) {
-              //doBlink2 = true;
-              //startBar(P2, pedestrianDelay);
+
+            if(receivedBits & (Event_PL2 | Event_PL2_Pressed_Yellow)) {
+
               timeToDelay = greenDelay - elapsedTime < pedestrianDelay ? (greenDelay - elapsedTime) : pedestrianDelay - yellowDelay;
               if (elapsedTime < walkingDelay && firstRound) timeToDelay = walkingDelay - elapsedTime;
               vTaskDelay(timeToDelay);
-            } else if((receivedBits & Event_TL2_Switch || receivedBits & Event_TL4_Switch) && !(receivedBits & Event_TL1_Switch || receivedBits & Event_TL3_Switch)) {
+
+            } else if((receivedBits & (Event_TL2_Switch | Event_TL4_Switch)) && !(receivedBits & (Event_TL1_Switch | Event_TL3_Switch))) {
               NextState = NSG_EWR;
-              if (elapsedTime > walkingDelay) stopBar(W1);
-              firstRound = false;
+
+              if (!walkingBarStarted) walkingBarStarted = true;
+              if (!(Event_NS_Safe_Walk & xEventGroupGetBits(eventGroup))) firstRound = false;
               break;
-            } else if(receivedBits & Event_TL1_Switch || receivedBits & Event_TL3_Switch) {
-              if(!(receivedBits & Event_TL2_Switch || receivedBits & Event_TL4_Switch)) {
+            } else if(receivedBits & (Event_TL1_Switch | Event_TL3_Switch)) {
+              if(!(receivedBits & (Event_TL2_Switch | Event_TL4_Switch))) {
                 if(!firstRound) {
                   toGreen = false;
                   NextState = NSY_EWR;
@@ -274,7 +275,6 @@ void TLHandler(void *argument)
                   if (receivedBits & Event_PL2) {
                     xEndTimer = xTaskGetTickCount();
                     elapsedTime = xEndTimer - xStartTimer;
-                    //doBlink2 = true;
                     startBar(P2, pedestrianDelay);
                     vTaskDelay(redDelayMax - elapsedTime);
                   }
@@ -291,18 +291,17 @@ void TLHandler(void *argument)
             NextState = NSY_EWR;
             toGreen = false;
             break;
+
         case NSY_EWR:
             instruction = TL_NS_Yellow | TL_EW_Red;
             current_instruction = update_instruction(current_instruction, instruction, TL);
             if (toGreen) {
-              startBar(R2, redDelayMax);
               stopBar(G2);
               xStartTimer = xTaskGetTickCount();
               receivedBits = xEventGroupWaitBits(eventGroup, Event_PL2, pdTRUE, pdFALSE, yellowDelay);
               xEndTimer = xTaskGetTickCount();
               elapsedTime = xEndTimer - xStartTimer;
               if(receivedBits & Event_PL2) {
-                //doBlink2 = true;
                 xEventGroupSetBits(eventGroup, Event_PL2_Pressed_Yellow);
                 vTaskDelay(yellowDelay - elapsedTime);
               }
@@ -316,7 +315,9 @@ void TLHandler(void *argument)
             }
             toGreen = true;
             firstRound = true;
+            walkingBarStarted = false;
             break;
+
         case NSR_EWY:
             instruction = TL_NS_Red | TL_EW_Yellow;
             current_instruction = update_instruction(current_instruction, instruction, TL);
@@ -327,7 +328,6 @@ void TLHandler(void *argument)
               xEndTimer = xTaskGetTickCount();
               elapsedTime = xEndTimer - xStartTimer;
               if(receivedBits & Event_PL1) {
-                //doBlink1 = true;
                 xEventGroupSetBits(eventGroup, Event_PL1_Pressed_Yellow);
                 vTaskDelay(yellowDelay - elapsedTime);
               }
@@ -341,12 +341,14 @@ void TLHandler(void *argument)
             }
             toGreen = true;
             firstRound = true;
+            walkingBarStarted = false;
             break;
+
         case NSR_EWG:
             instruction = TL_NS_Red | TL_EW_Green;
             current_instruction = update_instruction(current_instruction, instruction, TL);
             startBar(G2, greenDelay);
-            if (firstRound) {
+            if (!walkingBarStarted) {
               startBar(W2, walkingDelay);
             }
             stopBar(R2);
@@ -355,18 +357,19 @@ void TLHandler(void *argument)
             xEndTimer = xTaskGetTickCount();
             elapsedTime = xEndTimer - xStartTimer;
 
-            if(receivedBits & Event_PL1 || receivedBits & Event_PL1_Pressed_Yellow) {
+            if(receivedBits & (Event_PL1 | Event_PL1_Pressed_Yellow)) {
               //doBlink1 = true;
               startBar(P1, pedestrianDelay);
               timeToDelay = greenDelay - elapsedTime < pedestrianDelay ? (greenDelay - elapsedTime) : pedestrianDelay - yellowDelay;
               if (elapsedTime < walkingDelay && firstRound) timeToDelay = walkingDelay - elapsedTime;
               vTaskDelay(timeToDelay);
-            } else if((receivedBits & Event_TL1_Switch || receivedBits & Event_TL3_Switch) && !(receivedBits & Event_TL2_Switch || receivedBits & Event_TL4_Switch)) {
+            } else if((receivedBits & (Event_TL1_Switch | Event_TL3_Switch)) && !(receivedBits & (Event_TL2_Switch | Event_TL4_Switch))) {
               NextState = NSR_EWG;
-              firstRound = false;
+              if (!walkingBarStarted) walkingBarStarted = true;
+              if (!(Event_EW_Safe_Walk & xEventGroupGetBits(eventGroup))) firstRound = false;
               break;
-            } else if(receivedBits & Event_TL2_Switch || receivedBits & Event_TL4_Switch ) {
-              if(!(receivedBits & Event_TL1_Switch || receivedBits & Event_TL3_Switch)) {
+            } else if((receivedBits & (Event_TL2_Switch | Event_TL4_Switch))) {
+              if(!(receivedBits & (Event_TL1_Switch | Event_TL3_Switch))) {
                 if(!firstRound) {
                   toGreen = false;
                   NextState = NSR_EWY;
@@ -376,7 +379,6 @@ void TLHandler(void *argument)
                   if (receivedBits & Event_PL1) {
                     xEndTimer = xTaskGetTickCount();
                     elapsedTime = xEndTimer - xStartTimer;
-                    //doBlink1 = true;
                     startBar(P1, pedestrianDelay);
                     vTaskDelay(redDelayMax - elapsedTime);
                   }
@@ -419,15 +421,15 @@ void PLHandler(void *argument)
 
 	  receivedBits = xEventGroupWaitBits(eventGroup, Event_NS_Safe_Walk  | Event_EW_Safe_Walk, pdFALSE, pdFALSE, portMAX_DELAY);
       if(receivedBits & Event_NS_Safe_Walk) {
-    	  instruction = PL1_Green | PL2_Red;
-    	  current_instruction = update_instruction(current_instruction, instruction, PL);
+    	instruction = PL1_Green | PL2_Red;
+    	current_instruction = update_instruction(current_instruction, instruction, PL);
         stopBar(P1);
         vTaskDelay(walkingDelay);
         xEventGroupClearBits(eventGroup, Event_NS_Safe_Walk);
       }
       if(receivedBits & Event_EW_Safe_Walk) {
         instruction = PL1_Red | PL2_Green;
-    	  current_instruction = update_instruction(current_instruction, instruction, PL);
+    	current_instruction = update_instruction(current_instruction, instruction, PL);
         stopBar(P2);
         vTaskDelay(walkingDelay);
         xEventGroupClearBits(eventGroup, Event_EW_Safe_Walk);
