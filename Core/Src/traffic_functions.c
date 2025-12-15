@@ -2,6 +2,7 @@
 #include "traffic_functions.h"
 #include "traffic.h"
 
+// send the isntruction to the shift register using SPI
 void Send_Instruction(uint32_t instruction) {
     /* Make sure Reset and Enable are set to HIGH and LOW respectively */
     HAL_GPIO_WritePin(SR_Reset_GPIO_Port, SR_Reset_Pin, GPIO_PIN_SET);
@@ -18,6 +19,7 @@ void Send_Instruction(uint32_t instruction) {
     HAL_GPIO_WritePin(SR_STCP_GPIO_Port, SR_STCP_Pin, GPIO_PIN_RESET);
 }
 
+// updates the current instruction according to which light group should be midified, while keeping eveyrthing else the same
 uint32_t update_instruction(uint32_t current_instruction, uint32_t instruction, ledType led) {
     uint32_t zeroing;
     switch (led) {
