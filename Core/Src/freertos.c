@@ -31,6 +31,8 @@
 #include "traffic_functions.h"
 #include "semphr.h"
 #include "oled_functions.h"
+#include "adc.h"
+#include "tim.h"
 
 /* USER CODE END Includes */
 
@@ -60,6 +62,7 @@ bool blinkState;
 SemaphoreHandle_t lightMutex;
 SemaphoreHandle_t oledMutex;
 oledBarStruct oledBars[NUM_BARS];
+uint16_t poti_value;
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -486,7 +489,11 @@ void InHandler(void *argument)
     } else {
       xEventGroupClearBits(eventGroup, Event_TL4_Switch);
     }
-	  vTaskDelay(10);
+    HAL_ADC_Start(&hadc1);
+    HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+    poti_value = HAL_ADC_GetValue(&hadc1);
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, poti_value);
+	vTaskDelay(10);
   }
   /* USER CODE END InHandler */
 }

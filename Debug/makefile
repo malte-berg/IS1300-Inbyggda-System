@@ -64,8 +64,8 @@ all: main-build
 main-build: IS1300Project.elf secondary-outputs
 
 # Tool invocations
-IS1300Project.elf IS1300Project.map: $(OBJS) $(USER_OBJS) /Users/isabellalopiano/STM32CubeIDE/workspace_1.19.0/IS1300Project/STM32L476RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "IS1300Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/isabellalopiano/STM32CubeIDE/workspace_1.19.0/IS1300Project/STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IS1300Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+IS1300Project.elf IS1300Project.map: $(OBJS) $(USER_OBJS) /Users/malte/Library/Mobile\ Documents/com~apple~CloudDocs/KTH/IS1300\ -\ Inbyggda\ system/Project/git/IS1300-Inbyggda-System/STM32L476RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "IS1300Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/malte/Library/Mobile Documents/com~apple~CloudDocs/KTH/IS1300 - Inbyggda system/Project/git/IS1300-Inbyggda-System/STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IS1300Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
