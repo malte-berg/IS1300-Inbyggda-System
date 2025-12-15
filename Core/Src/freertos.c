@@ -221,6 +221,7 @@ void StartDefaultTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_TLHandler */
+// MAIN STATE MACHINE, responsible for sending instructions to light LEDs
 void TLHandler(void *argument)
 {
   /* USER CODE BEGIN TLHandler */
@@ -242,29 +243,35 @@ void TLHandler(void *argument)
         case NSG_EWR:
             instruction = TL_NS_Green | TL_EW_Red;
             current_instruction = update_instruction(current_instruction, instruction, TL);
+            // start the countdown bar for green delay 
             startBar(G1, greenDelay);
             if (!walkingBarStarted) {
               startBar(W1, walkingDelay);
             }
             stopBar(R1);
             xStartTimer = xTaskGetTickCount();
+            // wait for an external interupt from either a switch or a pedestrian button, if there is no external event, wait for green delay
             receivedBits = xEventGroupWaitBits(eventGroup, Event_PL2 | Event_TL1_Switch | Event_TL3_Switch | Event_TL2_Switch | Event_TL4_Switch | Event_PL2_Pressed_Yellow, pdTRUE, pdFALSE, greenDelay);
             xEndTimer = xTaskGetTickCount();
             elapsedTime = xEndTimer - xStartTimer;
 
+            // check if the pedestrian button is pressed in this state or previously pressed in yellow state
             if(receivedBits & (Event_PL2 | Event_PL2_Pressed_Yellow)) {
-
               timeToDelay = greenDelay - elapsedTime < pedestrianDelay ? (greenDelay - elapsedTime) : pedestrianDelay - yellowDelay;
+              // update the time to delay according to elasped time compared to walking delay 
               if (elapsedTime < walkingDelay && firstRound) timeToDelay = walkingDelay - elapsedTime;
               vTaskDelay(timeToDelay);
-
+              
+              // check if cars in non-conflicting direction and NO cars in conflicting direction
             } else if((receivedBits & (Event_TL2_Switch | Event_TL4_Switch)) && !(receivedBits & (Event_TL1_Switch | Event_TL3_Switch))) {
               NextState = NSG_EWR;
 
               if (!walkingBarStarted) walkingBarStarted = true;
               if (!(Event_NS_Safe_Walk & xEventGroupGetBits(eventGroup))) firstRound = false;
               break;
+              // check if cars in conflicting direction are present 
             } else if(receivedBits & (Event_TL1_Switch | Event_TL3_Switch)) {
+              // if there are NOT any cars in non-conflicting direction and it is NOT the first round, can switch to red delay 
               if(!(receivedBits & (Event_TL2_Switch | Event_TL4_Switch))) {
                 if(!firstRound) {
                   toGreen = false;
@@ -272,6 +279,7 @@ void TLHandler(void *argument)
                   startBar(R2, redDelayMax);
                   xStartTimer = xTaskGetTickCount();
                   receivedBits = xEventGroupWaitBits(eventGroup, Event_PL2, pdFALSE, pdFALSE, redDelayMax);
+                  // if the pedestrian button is pressed, start blue blinking
                   if (receivedBits & Event_PL2) {
                     xEndTimer = xTaskGetTickCount();
                     elapsedTime = xEndTimer - xStartTimer;
@@ -283,10 +291,11 @@ void TLHandler(void *argument)
               startBar(R2, redDelayMax);
               stopBar(G1);
               timeToDelay = greenDelay - elapsedTime < redDelayMax ? (greenDelay - elapsedTime) : redDelayMax;
+              // update the delay time to correct timing 
               if (elapsedTime < walkingDelay && firstRound) timeToDelay = walkingDelay - elapsedTime;
               vTaskDelay(timeToDelay);
             }
-            firstRound = false;
+            firstRound = false; // necessary to ensure a pedestrian alwyas get walking delay while also handling arrival of cars at red light 
             NextState = NSY_EWR;
             toGreen = false;
             break;
@@ -294,18 +303,20 @@ void TLHandler(void *argument)
         case NSY_EWR:
             instruction = TL_NS_Yellow | TL_EW_Red;
             current_instruction = update_instruction(current_instruction, instruction, TL);
+            // check if state machine  direction is clockwise or counterclockwise
             if (toGreen) {
               stopBar(G2);
               xStartTimer = xTaskGetTickCount();
               receivedBits = xEventGroupWaitBits(eventGroup, Event_PL2, pdTRUE, pdFALSE, yellowDelay);
               xEndTimer = xTaskGetTickCount();
               elapsedTime = xEndTimer - xStartTimer;
+              // check if the pedestrian button has been pressed  
               if(receivedBits & Event_PL2) {
-                xEventGroupSetBits(eventGroup, Event_PL2_Pressed_Yellow);
+                xEventGroupSetBits(eventGroup, Event_PL2_Pressed_Yellow); // indicate ped button pressed during yellow
                 vTaskDelay(yellowDelay - elapsedTime);
               }
               NextState = NSG_EWR;
-            } else {
+            } else { // no external interrupts of button presses
               vTaskDelay(yellowDelay);
               NextState = NSR_EWY;
               xEventGroupSetBits(eventGroup, Event_EW_Safe_Walk);
@@ -320,9 +331,11 @@ void TLHandler(void *argument)
         case NSR_EWY:
             instruction = TL_NS_Red | TL_EW_Yellow;
             current_instruction = update_instruction(current_instruction, instruction, TL);
+            // check if state machine  direction is clockwise or counterclockwise
             if (toGreen) {
               stopBar(G1);
               xStartTimer = xTaskGetTickCount();
+              // check if ped light was pressed while waiting in yellow
               receivedBits = xEventGroupWaitBits(eventGroup, Event_PL1, pdTRUE, pdFALSE, yellowDelay);
               xEndTimer = xTaskGetTickCount();
               elapsedTime = xEndTimer - xStartTimer;
@@ -331,7 +344,7 @@ void TLHandler(void *argument)
                 vTaskDelay(yellowDelay - elapsedTime);
               }
               NextState = NSR_EWG;
-            } else {
+            } else { // no button was pressed during yellow and NS not destined for green, proceed normally 
               vTaskDelay(yellowDelay);
               NextState = NSY_EWR;
               xEventGroupSetBits(eventGroup, Event_NS_Safe_Walk); // tell the pedestrian light that the N/S traffic is green
@@ -347,6 +360,7 @@ void TLHandler(void *argument)
             instruction = TL_NS_Red | TL_EW_Green;
             current_instruction = update_instruction(current_instruction, instruction, TL);
             startBar(G2, greenDelay);
+            // need to check if walkingDelay/bar has started as walking delay has higher priority over red delay max
             if (!walkingBarStarted) {
               startBar(W2, walkingDelay);
             }
@@ -355,23 +369,27 @@ void TLHandler(void *argument)
             receivedBits = xEventGroupWaitBits(eventGroup, Event_PL1 | Event_TL1_Switch | Event_TL3_Switch | Event_TL2_Switch | Event_TL4_Switch | Event_PL1_Pressed_Yellow, pdTRUE, pdFALSE, greenDelay);
             xEndTimer = xTaskGetTickCount();
             elapsedTime = xEndTimer - xStartTimer;
-
+            // check if pedestrian button was pressed while conflicting light green, or if it was pressed while conflicting light was yellow
             if(receivedBits & (Event_PL1 | Event_PL1_Pressed_Yellow)) {
               timeToDelay = greenDelay - elapsedTime < pedestrianDelay ? (greenDelay - elapsedTime) : pedestrianDelay - yellowDelay;
               if (elapsedTime < walkingDelay && firstRound) timeToDelay = walkingDelay - elapsedTime;
               vTaskDelay(timeToDelay);
+              // check if there are cars in non-conflicting direction AND no cars at the red light 
             } else if((receivedBits & (Event_TL1_Switch | Event_TL3_Switch)) && !(receivedBits & (Event_TL2_Switch | Event_TL4_Switch))) {
               NextState = NSR_EWG;
               if (!walkingBarStarted) walkingBarStarted = true;
               if (!(Event_EW_Safe_Walk & xEventGroupGetBits(eventGroup))) firstRound = false;
               break;
+            // cars present in conflicting direction
             } else if((receivedBits & (Event_TL2_Switch | Event_TL4_Switch))) {
+              // check for cars in non-conflicting direction 
               if(!(receivedBits & (Event_TL1_Switch | Event_TL3_Switch))) {
                 if(!firstRound) {
                   toGreen = false;
                   NextState = NSR_EWY;
                   startBar(R1, redDelayMax);
                   xStartTimer = xTaskGetTickCount();
+                  // wait redDelayMax unless a pedestrian button is pressed 
                   receivedBits = xEventGroupWaitBits(eventGroup, Event_PL1, pdFALSE, pdFALSE, redDelayMax);
                   if (receivedBits & Event_PL1) {
                     xEndTimer = xTaskGetTickCount();
@@ -406,6 +424,7 @@ void TLHandler(void *argument)
 * @retval None
 */
 /* USER CODE END Header_PLHandler */
+
 void PLHandler(void *argument)
 {
   /* USER CODE BEGIN PLHandler */
@@ -415,7 +434,7 @@ void PLHandler(void *argument)
   uint32_t instruction;
   for(;;)
   {
-
+    // ensure that the button pressed state is saved for at least walkingDelay time
 	  receivedBits = xEventGroupWaitBits(eventGroup, Event_NS_Safe_Walk  | Event_EW_Safe_Walk, pdFALSE, pdFALSE, portMAX_DELAY);
       if(receivedBits & Event_NS_Safe_Walk) {
         instruction = PL1_Green | PL2_Red;
@@ -443,12 +462,14 @@ void PLHandler(void *argument)
 * @retval None
 */
 /* USER CODE END Header_InHandler */
+// used to detect changes in the inputs of buttons and switches, clear bits if not activate
 void InHandler(void *argument)
 {
   /* USER CODE BEGIN InHandler */
   /* Infinite loop */
   for(;;)
   {
+    // detect if pedestrian button 2 is pressed
     if (HAL_GPIO_ReadPin(PL2_Switch_GPIO_Port, PL2_Switch_Pin) == GPIO_PIN_RESET) {
       xEventGroupSetBits(eventGroup, Event_PL2);
     //add a mutex 
@@ -459,6 +480,7 @@ void InHandler(void *argument)
 	  } else {
       xEventGroupClearBits(eventGroup, Event_PL2);
     }
+    // detect if ped button 1 is pressed
     if(HAL_GPIO_ReadPin(PL1_Switch_GPIO_Port, PL1_Switch_Pin) == GPIO_PIN_RESET) {
       xEventGroupSetBits(eventGroup, Event_PL1);
       if(current_instruction & PL1_Red) {
@@ -468,21 +490,25 @@ void InHandler(void *argument)
     } else {
       xEventGroupClearBits(eventGroup, Event_PL1);
     }
+    // detect if car at TL1
     if(HAL_GPIO_ReadPin(TL1_Car_GPIO_Port,TL1_Car_Pin) == GPIO_PIN_RESET) {
       xEventGroupSetBits(eventGroup, Event_TL1_Switch);
     } else {
       xEventGroupClearBits(eventGroup, Event_TL1_Switch);
     }
+    // detect if car at TL2
     if(HAL_GPIO_ReadPin(TL2_Car_GPIO_Port,TL2_Car_Pin) == GPIO_PIN_RESET) {
       xEventGroupSetBits(eventGroup, Event_TL2_Switch);
     } else {
       xEventGroupClearBits(eventGroup, Event_TL2_Switch);
     }
+    // detect if car at TL3
     if(HAL_GPIO_ReadPin(TL3_Car_GPIO_Port,TL3_Car_Pin) == GPIO_PIN_RESET) {
       xEventGroupSetBits(eventGroup, Event_TL3_Switch);
     } else {
       xEventGroupClearBits(eventGroup, Event_TL3_Switch);
     }
+    // detect if car at TL4
     if(HAL_GPIO_ReadPin(TL4_Car_GPIO_Port,TL4_Car_Pin)  == GPIO_PIN_RESET) {
       xEventGroupSetBits(eventGroup, Event_TL4_Switch);
     } else {
@@ -504,19 +530,22 @@ void InHandler(void *argument)
 * @retval None
 */
 /* USER CODE END Header_blinkTask */
+// controls the blinking of the blue pedestrian lights 
 void blinkTask(void *argument)
 {
   /* USER CODE BEGIN blinkTask */
   /* Infinite loop */
   for(;;)
   {
+    // check the flags that get set when a ped button is pressed 
     if (doBlink1 || doBlink2) {
       uint32_t instruction = 0x0;
+      // blink it, baby 
       if (doBlink1) instruction |= blinkState ? PL1_Blue : 0;
       if (doBlink2) instruction |= blinkState ? PL2_Blue : 0;
       current_instruction = update_instruction(current_instruction, instruction, PLB);
     }
-    blinkState = !blinkState;
+    blinkState = !blinkState; // toggle so the blink toggles
     vTaskDelay(toggleFreq);
   }
   /* USER CODE END blinkTask */
@@ -540,8 +569,10 @@ void OLHandler(void *argument)
   for(;;)
   {
     TickType_t current = xTaskGetTickCount();
+    // ensure mutual exlcusion 
     xSemaphoreTake(oledMutex, portMAX_DELAY);
     for(int i = 0; i < NUM_BARS; i++) {
+      // account for empty bars 
       if(oledBars[i].active == 0) {
         screenArray[i] = BAR_Y1; // bar empty
         continue;
@@ -551,18 +582,20 @@ void OLHandler(void *argument)
       TickType_t total  = oledBars[i].durationTick;
       TickType_t elapsed = current - start;
 
+      // handle expired bars
       if(elapsed >= total) {
         oledBars[i].active = 0;
         screenArray[i] = BAR_Y1;
         continue;
       }
-
+      // compute the remaining bar height 
       float barRatio = 1.0f - ((float)elapsed / (float)total);
       if(barRatio < 0.0f) barRatio = 0.0f;
       if(barRatio > 1.0f) barRatio = 1.0f;
 
       uint8_t top = BAR_Y1 - (uint8_t)((barRatio * MAX_BAR_HEIGHT));
 
+      // ensure the bar is in a valid range 
       if(top < BAR_Y2) top = BAR_Y2;
       if(top > BAR_Y1) top = BAR_Y1;
 

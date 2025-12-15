@@ -4,6 +4,7 @@
 #include <spi.h>
 #include <stdlib.h>
 
+// send the isntruction to the shift register using SPI
 void Send_Instruction(uint32_t instruction) {
     /* Make sure Reset and Enable are set to HIGH and LOW respectively */
     uint8_t *data = malloc(sizeof(uint8_t)*(3));
@@ -19,6 +20,7 @@ void Send_Instruction(uint32_t instruction) {
     free(data);
 }
 
+// updates the current instruction according to which light group should be midified, while keeping eveyrthing else the same
 uint32_t update_instruction(uint32_t current_instruction, uint32_t instruction, ledType led) {
     uint32_t zeroing;
     switch (led) {
