@@ -1,7 +1,7 @@
 ../Core/Src/freertos.c:130:6:MX_FREERTOS_Init	2
-../Core/Src/freertos.c:206:6:StartDefaultTask	1
+../Core/Src/freertos.c:205:6:StartDefaultTask	1
 ../Core/Src/freertos.c:224:6:TLHandler	39
-../Core/Src/freertos.c:412:6:PLHandler	3
-../Core/Src/freertos.c:449:6:InHandler	11
-../Core/Src/freertos.c:510:6:blinkTask	7
-../Core/Src/freertos.c:535:6:OLHandler	8
+../Core/Src/freertos.c:426:6:PLHandler	3
+../Core/Src/freertos.c:464:6:InHandler	11
+../Core/Src/freertos.c:531:6:blinkTask	7
+../Core/Src/freertos.c:558:6:OLHandler	8

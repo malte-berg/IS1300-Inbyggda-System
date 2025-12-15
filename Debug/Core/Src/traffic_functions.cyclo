@@ -1,2 +1,2 @@
-../Core/Src/traffic_functions.c:7:6:Send_Instruction	1
-../Core/Src/traffic_functions.c:22:10:update_instruction	5
+../Core/Src/traffic_functions.c:8:6:Send_Instruction	1
+../Core/Src/traffic_functions.c:24:10:update_instruction	5

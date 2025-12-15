@@ -103,10 +103,11 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+
+  //Init screen and start PWM for potentiometer control
   ssd1306_Init();
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-  //ssd1306_Fill(White);
-  //ssd1306_UpdateScreen();
+
 #ifdef RUN_TEST_PROGRAM
   Test_program();
 #else
