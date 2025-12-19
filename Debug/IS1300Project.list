@@ -5037,25 +5037,25 @@ void Test_Leds(void) {
  80022c4:	bd80      	pop	{r7, pc}
 
 080022c6 <Test_OLED>:
-
-    Send_Instruction(instruction);
-    */
-}
-
-void Test_OLED(void) {
+        drawBars(bar_vals);
+        HAL_Delay(10);
+    }
+  }
+  for(int j = 0; j < 8; j++) {
+    for (int i = BAR_Y2; i <= BAR_Y1; i++) {
  80022c6:	b580      	push	{r7, lr}
  80022c8:	b08a      	sub	sp, #40	@ 0x28
  80022ca:	af00      	add	r7, sp, #0
-  uint8_t bar_vals[8];
-  for (int i = BAR_Y1; i >= BAR_Y2; i--) {
+        bar_vals[j] = i;
+        drawBars(bar_vals);
  80022cc:	2334      	movs	r3, #52	@ 0x34
  80022ce:	627b      	str	r3, [r7, #36]	@ 0x24
  80022d0:	e019      	b.n	8002306 <Test_OLED+0x40>
-    for(int j = 0; j < 8; j++) {
+        HAL_Delay(10);
  80022d2:	2300      	movs	r3, #0
  80022d4:	623b      	str	r3, [r7, #32]
  80022d6:	e009      	b.n	80022ec <Test_OLED+0x26>
-      bar_vals[j] = i;
+    }
  80022d8:	6a7b      	ldr	r3, [r7, #36]	@ 0x24
  80022da:	b2d9      	uxtb	r1, r3
  80022dc:	463a      	mov	r2, r7
@@ -5063,38 +5063,34 @@ void Test_OLED(void) {
  80022e0:	4413      	add	r3, r2
  80022e2:	460a      	mov	r2, r1
  80022e4:	701a      	strb	r2, [r3, #0]
-    for(int j = 0; j < 8; j++) {
+        HAL_Delay(10);
  80022e6:	6a3b      	ldr	r3, [r7, #32]
  80022e8:	3301      	adds	r3, #1
  80022ea:	623b      	str	r3, [r7, #32]
  80022ec:	6a3b      	ldr	r3, [r7, #32]
  80022ee:	2b07      	cmp	r3, #7
  80022f0:	ddf2      	ble.n	80022d8 <Test_OLED+0x12>
-    }
-    drawBars(bar_vals);
+  }
+}
  80022f2:	463b      	mov	r3, r7
  80022f4:	4618      	mov	r0, r3
  80022f6:	f7ff fa2c 	bl	8001752 <drawBars>
-    HAL_Delay(10);
+
  80022fa:	200a      	movs	r0, #10
  80022fc:	f000 fafc 	bl	80028f8 <HAL_Delay>
-  for (int i = BAR_Y1; i >= BAR_Y2; i--) {
+        drawBars(bar_vals);
  8002300:	6a7b      	ldr	r3, [r7, #36]	@ 0x24
  8002302:	3b01      	subs	r3, #1
  8002304:	627b      	str	r3, [r7, #36]	@ 0x24
  8002306:	6a7b      	ldr	r3, [r7, #36]	@ 0x24
  8002308:	2b01      	cmp	r3, #1
  800230a:	dce2      	bgt.n	80022d2 <Test_OLED+0xc>
-  }
-  for (int i = BAR_Y2; i <= BAR_Y1; i++) {
  800230c:	2302      	movs	r3, #2
  800230e:	61fb      	str	r3, [r7, #28]
  8002310:	e019      	b.n	8002346 <Test_OLED+0x80>
-      for(int j = 0; j < 8; j++) {
  8002312:	2300      	movs	r3, #0
  8002314:	61bb      	str	r3, [r7, #24]
  8002316:	e009      	b.n	800232c <Test_OLED+0x66>
-        bar_vals[j] = i;
  8002318:	69fb      	ldr	r3, [r7, #28]
  800231a:	b2d9      	uxtb	r1, r3
  800231c:	463a      	mov	r2, r7
@@ -5102,38 +5098,29 @@ void Test_OLED(void) {
  8002320:	4413      	add	r3, r2
  8002322:	460a      	mov	r2, r1
  8002324:	701a      	strb	r2, [r3, #0]
-      for(int j = 0; j < 8; j++) {
  8002326:	69bb      	ldr	r3, [r7, #24]
  8002328:	3301      	adds	r3, #1
  800232a:	61bb      	str	r3, [r7, #24]
  800232c:	69bb      	ldr	r3, [r7, #24]
  800232e:	2b07      	cmp	r3, #7
  8002330:	ddf2      	ble.n	8002318 <Test_OLED+0x52>
-      }
-      drawBars(bar_vals);
  8002332:	463b      	mov	r3, r7
  8002334:	4618      	mov	r0, r3
  8002336:	f7ff fa0c 	bl	8001752 <drawBars>
-      HAL_Delay(10);
  800233a:	200a      	movs	r0, #10
  800233c:	f000 fadc 	bl	80028f8 <HAL_Delay>
-  for (int i = BAR_Y2; i <= BAR_Y1; i++) {
  8002340:	69fb      	ldr	r3, [r7, #28]
  8002342:	3301      	adds	r3, #1
  8002344:	61fb      	str	r3, [r7, #28]
  8002346:	69fb      	ldr	r3, [r7, #28]
  8002348:	2b34      	cmp	r3, #52	@ 0x34
  800234a:	dde2      	ble.n	8002312 <Test_OLED+0x4c>
-  }
-  for(int j = 0; j < 8; j++) {
  800234c:	2300      	movs	r3, #0
  800234e:	617b      	str	r3, [r7, #20]
  8002350:	e019      	b.n	8002386 <Test_OLED+0xc0>
-      for (int i = BAR_Y1; i >= BAR_Y2; i--) {
  8002352:	2334      	movs	r3, #52	@ 0x34
  8002354:	613b      	str	r3, [r7, #16]
  8002356:	e010      	b.n	800237a <Test_OLED+0xb4>
-          bar_vals[j] = i;
  8002358:	693b      	ldr	r3, [r7, #16]
  800235a:	b2d9      	uxtb	r1, r3
  800235c:	463a      	mov	r2, r7
@@ -5141,38 +5128,29 @@ void Test_OLED(void) {
  8002360:	4413      	add	r3, r2
  8002362:	460a      	mov	r2, r1
  8002364:	701a      	strb	r2, [r3, #0]
-          drawBars(bar_vals);
  8002366:	463b      	mov	r3, r7
  8002368:	4618      	mov	r0, r3
  800236a:	f7ff f9f2 	bl	8001752 <drawBars>
-          HAL_Delay(10);
  800236e:	200a      	movs	r0, #10
  8002370:	f000 fac2 	bl	80028f8 <HAL_Delay>
-      for (int i = BAR_Y1; i >= BAR_Y2; i--) {
  8002374:	693b      	ldr	r3, [r7, #16]
  8002376:	3b01      	subs	r3, #1
  8002378:	613b      	str	r3, [r7, #16]
  800237a:	693b      	ldr	r3, [r7, #16]
  800237c:	2b01      	cmp	r3, #1
  800237e:	dceb      	bgt.n	8002358 <Test_OLED+0x92>
-  for(int j = 0; j < 8; j++) {
  8002380:	697b      	ldr	r3, [r7, #20]
  8002382:	3301      	adds	r3, #1
  8002384:	617b      	str	r3, [r7, #20]
  8002386:	697b      	ldr	r3, [r7, #20]
  8002388:	2b07      	cmp	r3, #7
  800238a:	dde2      	ble.n	8002352 <Test_OLED+0x8c>
-      }
-  }
-  for(int j = 0; j < 8; j++) {
  800238c:	2300      	movs	r3, #0
  800238e:	60fb      	str	r3, [r7, #12]
  8002390:	e019      	b.n	80023c6 <Test_OLED+0x100>
-    for (int i = BAR_Y2; i <= BAR_Y1; i++) {
  8002392:	2302      	movs	r3, #2
  8002394:	60bb      	str	r3, [r7, #8]
  8002396:	e010      	b.n	80023ba <Test_OLED+0xf4>
-        bar_vals[j] = i;
  8002398:	68bb      	ldr	r3, [r7, #8]
  800239a:	b2d9      	uxtb	r1, r3
  800239c:	463a      	mov	r2, r7
@@ -5180,30 +5158,23 @@ void Test_OLED(void) {
  80023a0:	4413      	add	r3, r2
  80023a2:	460a      	mov	r2, r1
  80023a4:	701a      	strb	r2, [r3, #0]
-        drawBars(bar_vals);
  80023a6:	463b      	mov	r3, r7
  80023a8:	4618      	mov	r0, r3
  80023aa:	f7ff f9d2 	bl	8001752 <drawBars>
-        HAL_Delay(10);
  80023ae:	200a      	movs	r0, #10
  80023b0:	f000 faa2 	bl	80028f8 <HAL_Delay>
-    for (int i = BAR_Y2; i <= BAR_Y1; i++) {
  80023b4:	68bb      	ldr	r3, [r7, #8]
  80023b6:	3301      	adds	r3, #1
  80023b8:	60bb      	str	r3, [r7, #8]
  80023ba:	68bb      	ldr	r3, [r7, #8]
  80023bc:	2b34      	cmp	r3, #52	@ 0x34
  80023be:	ddeb      	ble.n	8002398 <Test_OLED+0xd2>
-  for(int j = 0; j < 8; j++) {
  80023c0:	68fb      	ldr	r3, [r7, #12]
  80023c2:	3301      	adds	r3, #1
  80023c4:	60fb      	str	r3, [r7, #12]
  80023c6:	68fb      	ldr	r3, [r7, #12]
  80023c8:	2b07      	cmp	r3, #7
  80023ca:	dde2      	ble.n	8002392 <Test_OLED+0xcc>
-    }
-  }
-}
  80023cc:	bf00      	nop
  80023ce:	bf00      	nop
  80023d0:	3728      	adds	r7, #40	@ 0x28
