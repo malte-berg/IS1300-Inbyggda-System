@@ -23,8 +23,10 @@ extern oledBarStruct oledBars[NUM_BARS];
 
 #define MAX_BAR_HEIGHT 50
 
-#define BAR_Y1 52 // max height of the bars
-#define BAR_Y2 2
+// OLED is (0,0) top left => Higher Y = lower on screen
+
+#define BAR_Y1 52 // bottom height of the bars
+#define BAR_Y2 2  // top
 #define BAR_X1 3
 #define BAR_X2 13
 #define BAR_PADDING 6

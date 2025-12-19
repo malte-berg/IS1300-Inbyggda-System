@@ -1,48 +1,52 @@
-#include "FreeRTOS.h"
 #include "Test.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include "main.h"
-#include "Traffic.h"
-#include "event_groups.h"
-#include "cmsis_os.h"
 
 void Test_program(void) {
     Test_Leds();
+    Test_OLED();
+    HAL_Delay(500);
 }
 
 void Test_Leds(void) {
+    HAL_GPIO_WritePin(SR_Reset_GPIO_Port, SR_Reset_Pin, GPIO_PIN_SET);
     /* Set instruction to turn on specific LEDS */
     int32_t instruction = 0x800000;
 
     for(int j = 0; j < 24; j++) {
         Send_Instruction(instruction);
-        HAL_Delay(100);
-        instruction = instruction >> 1;
+        HAL_Delay(200);
+        instruction = instruction >> 1; // Loop through all leds
     }
 }
 
-void Test_EventGroup(EventGroupHandle_t eventGroup) {
-  /*
-    EventBits_t receivedBits;
-    receivedBits = xEventGroupWaitBits(eventGroup, (Event_PL1 | Event_PL2 | Event_TL1_Switch | Event_TL2_Switch | Event_TL3_Switch | Event_TL4_Switch), pdTRUE, pdFALSE, portMAX_DELAY);
-
-    uint32_t instruction = 0x0;
-
-    if(receivedBits & Event_PL1)
-      instruction = PL1_Green;
-    else if(receivedBits & Event_PL2)
-      instruction = PL2_Green;
-    else if(receivedBits & Event_TL1_Switch)
-      instruction = TL1_Green;
-    else if(receivedBits & Event_TL2_Switch)
-      instruction = TL2_Green;
-    else if(receivedBits & Event_TL3_Switch)
-      instruction = TL3_Green;
-    else if(receivedBits & Event_TL4_Switch)
-      instruction = TL4_Green;
-
-    Send_Instruction(instruction);
-    */
+void Test_OLED(void) {
+  uint8_t bar_vals[8];
+  for (int i = BAR_Y1; i >= BAR_Y2; i--) {
+    for(int j = 0; j < 8; j++) {
+      bar_vals[j] = i;
+    }
+    drawBars(bar_vals);
+    HAL_Delay(10);
+  }
+  for (int i = BAR_Y2; i <= BAR_Y1; i++) {
+    for(int j = 0; j < 8; j++) {
+      bar_vals[j] = i;
+    }
+    drawBars(bar_vals);
+    HAL_Delay(10);
+  }
+  for(int j = 0; j < 8; j++) {
+    for (int i = BAR_Y1; i >= BAR_Y2; i--) {
+        bar_vals[j] = i;
+        drawBars(bar_vals);
+        HAL_Delay(10);
+    }
+  }
+  for(int j = 0; j < 8; j++) {
+    for (int i = BAR_Y2; i <= BAR_Y1; i++) {
+        bar_vals[j] = i;
+        drawBars(bar_vals);
+        HAL_Delay(10);
+    }
+  }
 }
 

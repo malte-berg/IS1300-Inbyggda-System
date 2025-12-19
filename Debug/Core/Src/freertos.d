@@ -48,12 +48,12 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
- ../Core/Inc/Test.h ../Core/Inc/traffic_functions.h \
+ ../Core/Inc/Test.h ../Core/Inc/main.h ../Core/Inc/oled_functions.h \
+ ../Core/Inc/ssd1306.h ../Core/Inc/ssd1306_conf.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h \
  ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
- ../Core/Inc/oled_functions.h ../Core/Inc/ssd1306.h \
- ../Core/Inc/ssd1306_conf.h ../Core/Inc/main.h ../Core/Inc/adc.h \
- ../Core/Inc/tim.h
+ ../Core/Inc/traffic_functions.h ../Core/Inc/traffic_functions.h \
+ ../Core/Inc/oled_functions.h ../Core/Inc/adc.h ../Core/Inc/tim.h
 ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
 ../Core/Inc/FreeRTOSConfig.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
@@ -105,12 +105,14 @@ Core/Src/freertos.o: ../Core/Src/freertos.c \
 ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
 ../Core/Inc/Test.h:
-../Core/Inc/traffic_functions.h:
-../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:
-../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
+../Core/Inc/main.h:
 ../Core/Inc/oled_functions.h:
 ../Core/Inc/ssd1306.h:
 ../Core/Inc/ssd1306_conf.h:
-../Core/Inc/main.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
+../Core/Inc/traffic_functions.h:
+../Core/Inc/traffic_functions.h:
+../Core/Inc/oled_functions.h:
 ../Core/Inc/adc.h:
 ../Core/Inc/tim.h:
